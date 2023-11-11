@@ -1,0 +1,8 @@
+# depslib dependency file v1.0
+1699677203 source:c:\codeblocks_projects\tvi2\main.cpp
+	<iostream>
+	<ctime>
+	<algorithm>
+	<cmath>
+	<fstream>
+
