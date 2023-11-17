@@ -374,41 +374,49 @@ void selection (string sel_switch, float *power, int fights, int n, int **parent
 
 
 
-void count_x(int **A, int n, int m, float h1, float h2, float left1, float left2, float *x1, float *x2, int m1, int m2, bool parents = false)
+void count_x(int **A, int n, float *h, float *left, float **x, int *number_m, int number_x, bool parents = false)
 {
-    int temp = 0, i, j, k;
+    int temp = 0, i, j, k, t, cum_m=0;
     for (i = 0; i < n; i++)
     {
-        for (j = 0, k = m1-1; j < m1; j++, k--)
+        cum_m = 0;
+        for (t = 0; t < number_x; t++)
         {
-            if (A[i][j] == 1)
+            cum_m += number_m[t];
+            if (t == 0)
             {
-                temp += pow(2,k);
+                for (j = 0, k = number_m[t]-1; j < number_m[t]; j++, k--)
+                {
+                    if (A[i][j] == 1)
+                    {
+                        temp += pow(2,k);
+                    }
+                }
             }
-        }
-        if (parents)
-            x1[i] = h1*temp + left1;
-        else
-            x1[i+n] = h1*temp + left1;
-        temp = 0;
-        for (j = m1, k = m2-1; j < m; j++, k--)
-        {
-            if (A[i][j] == 1)
+            else
             {
-                temp += pow(2,k);
+                for (j = cum_m-number_m[t], k = number_m[t]-1; j < cum_m-1; j++, k--)
+                {
+                    if (A[i][j] == 1)
+                    {
+                        temp += pow(2,k);
+                    }
+                }
             }
+            if (parents)
+                x[i][t] = h[t]*temp + left[t];
+            else
+                x[i+n][t] = h[t]*temp + left[t];
+            temp = 0;
         }
-        if (parents)
-            x2[i] = h2*temp + left2;
-        else
-            x2[i+n] = h2*temp + left2;
-        temp = 0;
+
     }
 }
 
-void func(float *x1, float *x2, float *f, int n, int kind_of_func, bool parents = false)
+void func(float **x, float *f, int n, int kind_of_func, int number_x, bool parents = false)
 {
-    int i, j = 0;
+    int i, j = 0, k;
+    float sum1, sum2;
     if (parents == false)
     {
         j = n;
@@ -416,10 +424,48 @@ void func(float *x1, float *x2, float *f, int n, int kind_of_func, bool parents 
     }
     if (kind_of_func == 0)
         for (i = j; i < n; i++)
-            f[i] = 10*x1[i]-5*x2[i];
+            f[i] = 10*x[i][0]-5*x[i][1];
+    if (kind_of_func == 1)
+        for (i = j; i < n; i++)
+            f[i] = x[i][0]*x[i][0]+x[i][1]*x[i][1];
+    if (kind_of_func == 2)
+        for (i = j; i < n; i++)
+            f[i] = 5*x[i][0]+0.5*x[i][1];
+    if (kind_of_func == 3)
+        for (i = j; i < n; i++)
+            f[i] = x[i][0]*x[i][0]*x[i][0]+x[i][1}*x[i][1]+x[i][2];
+    if (kind_of_func == 4)
+        for (i = j; i < n; i++)
+            f[i] = 2000*x[i][0]+2400*x[i][1];
+    if (kind_of_func == 5)
+    {
+        for (i = j; i < n; i++)
+        {
+            sum1 = 0;
+            sum2 = 0;
+            for (k = 0; k < number_x; k++)
+            {
+                sum1+=x[i][k]*x[i][k]/number_x;
+                sum2+=cos(2*pi*x[i][k]/number_x);
+            }
+            // e это эпсилант??
+            f[i] = 20-20*exp(-0.2*sum1)-exp(sum2);
+        }
+    }
+    if (kind_of_func == 6)
+    {
+        for (i = j; i < n; i++)
+        {
+            sum1 = 0;
+            for (k = 0; k < number_x; k++)
+                sum1+=0.1*x[i][k]*x[i][k]-4*cos(0.8*x[i][k])+4;
+            // e это эпсилант??
+            f[i] = sum1;
+        }
+    }
 }
 
-void fine(float *x1, float *x2, int n, float *fines, float b, int kind_of_func, bool parents = false)
+void fine(float **x, int n, float *fines, float b, int kind_of_func, bool parents = false)
 {
     int i, j, k = 0;
     float mult_fines = 1, temp_fines = 0;
@@ -434,32 +480,188 @@ void fine(float *x1, float *x2, int n, float *fines, float b, int kind_of_func, 
         {
             temp_fines = 0;
             for (j = 0; j < b; j++)
-                mult_fines*=max(float(0), x2[i]-15);
+                mult_fines*=max(float(0), x[i][1]-15);
             temp_fines+=mult_fines;
             mult_fines = 1;
             for (j = 0; j < b; j++)
-                mult_fines*=max(float(0), x2[i]+2*x1[i]*x1[i]-20);
+                mult_fines*=max(float(0), x[i][1]+2*x[i][0]*x[i][0]-20);
             temp_fines+=mult_fines;
             mult_fines = 1;
             for (j = 0; j < b; j++)
-                mult_fines*=max(0., -((x1[i]*x1[i])/2.)-x2[i]);
+                mult_fines*=max(0., -((x[i][0]*x[i][0])/2.)-x[i][1]);
+            temp_fines+=mult_fines;
+            fines[i] = temp_fines;
+        }
+
+    }
+    if(kind_of_func == 1)
+    {
+        for(i = k; i < n; i++)
+        {
+            temp_fines = 0;
+            for (j = 0; j < b; j++)
+                mult_fines*=max(float(0), x[i][1]-7-sin(2*x[i][0]));
+            temp_fines+=mult_fines;
+            mult_fines = 1;
+            for (j = 0; j < b; j++)
+                mult_fines*=max(float(0), 1-sin(2*x[i][0])-x[i][1]);
+            temp_fines+=mult_fines;
+            mult_fines = 1;
+            if (x[i][0]>=0 && x[i][0]<=4)
+                mult_fines = 0;
+            if (x[i][0]<0)
+                for (j = 0; j < b; j++)
+                    mult_fines*=-x[i][0];
+            if (x[i][0]>4)
+                for (j = 0; j < b; j++)
+                    mult_fines*=x[i][0]-4;
+            temp_fines+=mult_fines;
+            fines[i] = temp_fines;
+        }
+
+    }
+    if(kind_of_func == 2)
+    {
+        for(i = k; i < n; i++)
+        {
+            temp_fines = 0;
+            for (j = 0; j < b; j++)
+                mult_fines*=max(float(0), x[i][1]+2*x[i][0]-5);
+            temp_fines+=mult_fines;
+            mult_fines = 1;
+            for (j = 0; j < b; j++)
+                mult_fines*=max(0., x[i][0]-1.5-x[i][1]);
+            temp_fines+=mult_fines;
+            mult_fines = 1;
+            for (j = 0; j < b; j++)
+                mult_fines*=max(float(0), x[i][1]-2*x[i][0]-1);
+            temp_fines+=mult_fines;
+            fines[i] = temp_fines;
+        }
+
+    }
+    if(kind_of_func == 3)
+    {
+        for(i = k; i < n; i++)
+        {
+            temp_fines = 0;
+            for (j = 0; j < b; j++)
+                mult_fines*=max(float(0), -x[i][0]);
+            temp_fines+=mult_fines;
+            mult_fines = 1;
+            for (j = 0; j < b; j++)
+                mult_fines*=max(0., -x[i][1]);
+            temp_fines+=mult_fines;
+            mult_fines = 1;
+            for (j = 0; j < b; j++)
+                mult_fines*=max(float(0), -x[i][2]);
+            temp_fines+=mult_fines;
+            mult_fines = 1;
+            for (j = 0; j < b; j++)
+                mult_fines*=max(float(0), x[i][0]*x[i][0]+x[i][1]*x[i][1]+x[i][2]*x[i][2]-25);
+            temp_fines+=mult_fines;
+            fines[i] = temp_fines;
+        }
+
+    }
+    if(kind_of_func == 4)
+    {
+        for(i = k; i < n; i++)
+        {
+            temp_fines = 0;
+            for (j = 0; j < b; j++)
+                mult_fines*=max(float(0), -x[i][0]);
+            temp_fines+=mult_fines;
+            mult_fines = 1;
+            for (j = 0; j < b; j++)
+                mult_fines*=max(0., -x[i][1]);
+            temp_fines+=mult_fines;
+            mult_fines = 1;
+            for (j = 0; j < b; j++)
+                mult_fines*=max(float(0), x[i][0]/120+x[i][1]/110-1);
+            temp_fines+=mult_fines;
+            mult_fines = 1;
+            for (j = 0; j < b; j++)
+                mult_fines*=max(float(0), 4*x[i][0]+x[i][1]-320);
+            temp_fines+=mult_fines;
+            mult_fines = 1;
+            for (j = 0; j < b; j++)
+                mult_fines*=max(float(0), x[i][0]+x[i][1]-110);
+            temp_fines+=mult_fines;
+            mult_fines = 1;
+            for (j = 0; j < b; j++)
+                mult_fines*=max(float(0), x[i][0]/340+x[i][1]/120-1);
+            temp_fines+=mult_fines;
+            mult_fines = 1;
+            for (j = 0; j < b; j++)
+                mult_fines*=max(float(0), x[i][0]+2*x[i][1]-160);
+            temp_fines+=mult_fines;
+            mult_fines = 1;
+            for (j = 0; j < b; j++)
+                mult_fines*=max(float(0), x[i][0]+4*x[i][1]-280);
+            temp_fines+=mult_fines;
+            fines[i] = temp_fines;
+        }
+
+    }
+    if(kind_of_func == 5)
+    {
+        for(i = k; i < n; i++)
+        {
+            temp_fines = 0;
+            for (j = 0; j < b; j++)
+                mult_fines*=max(float(0), 2*x[i][0]-3*x[i][1]+4*x[i][2]-10);
+            temp_fines+=mult_fines;
+            mult_fines = 1;
+            for (j = 0; j < b; j++)
+                mult_fines*=max(0., 4*x[i][1]-5*x[i][2]+x[i][3]-1);
+            temp_fines+=mult_fines;
+            mult_fines = 1;
+            for (j = 0; j < b; j++)
+                mult_fines*=max(float(0), 10*x[i][0]+7.5*x[i][2]-8.4*x[i][3]-3.5);
+            temp_fines+=mult_fines;
+            mult_fines = 1;
+            for (j = 0; j < b; j++)
+                mult_fines*=max(float(0), -3.1*x[i][0]+21.7*x[i][1]-36.4*x[i][3]-16.2);
+            temp_fines+=mult_fines;
+            fines[i] = temp_fines;
+        }
+
+    }
+    if(kind_of_func == 6)
+    {
+        for(i = k; i < n; i++)
+        {
+            temp_fines = 0;
+            for (j = 0; j < b; j++)
+                mult_fines*=max(float(0), x[i][0]*x[i][0]+9*x[i][1]*x[i][1]-36);
+            temp_fines+=mult_fines;
+            mult_fines = 1;
+            for (j = 0; j < b; j++)
+                mult_fines*=max(float(0), 9*x[i][0]*x[i][0]+x[i][1]*x[i][1]-36);
             temp_fines+=mult_fines;
             fines[i] = temp_fines;
         }
 
     }
 }
-
-void fitness(float *power, float* f, int globali, float *fines, float C, float a, float b, int n, int kind_of_func, bool parents = false)
+//нужно сохранять значение лямбды предыдущее
+void fitness(float *power, float* f, int globali, float *fines, float C, float a, float b, int n, int kind_of_func,
+             int kind_of_fine, float b1, float b2, float k, int without_fines, bool parents = false)
 {
     int i, delta;
     float pow, lambda = 1;
-    for (i = 0; i < a; i++)
+    if(kind_of_fine == 1)
+        for (i = 0; i < a; i++)
+            lambda*=C*globali;
+    if(kind_of_fine == 2)
     {
-        lambda*=C*globali;
+
     }
-    if(kind_of_func == 0)
+    if(kind_of_func == 0||kind_of_func == 1||kind_of_func == 2||kind_of_func == 3||kind_of_func == 4)
         delta = -1;
+    if(kind_of_func == 5||kind_of_func == 6)
+        delta = 1;
     if(parents)
     {
         for (i = 0; i < n; i++)
@@ -477,100 +679,66 @@ void fitness(float *power, float* f, int globali, float *fines, float C, float a
 
 }
 
-void limits(float*left1, float *left2, float *h1, float *h2, int kind_of_func, float* opt1, float* opt2, float e, int* m1=0, int* m2=0, int *m=0)
+void limits(float*left, float *h, int kind_of_func, float* opt1, float* opt2, float e, int* number_m, int number_x, int *m=0)
 {
-    float nparts, right1, right2, z;
-    int s = 1;
-    if (kind_of_func == 0||kind_of_func == 1||kind_of_func == 3)
+    float nparts, z;
+    int s = 1, i, temp_m;
+    float *right = new float[number_x];
+    if (kind_of_func == 0)
     {
-        *left1 = 0;
-        right1 = 5;
-        *left2 = -20;
-        right2 = 20;
+        left[0] = 0;
+        right[0] = 5;
+        left[1] = -20;
+        right[1] = 20;
         *opt1 = 3.65148371670110760;
         *opt2 = -6.6666666666666666;
         z = 69.8481705003444092;
     }
-    /*if (kind_of_func == 2)
+    if (kind_of_func == 1)
     {
-        *left = -2;
-        *right = 2;
-        *opt1 = 1;
-        *opt2 = 1;
+        left[0] = 0;
+        right[0] = 5;
+        left[1] = 0;
+        right[1] = 8;
+        *opt1 = 4;
+        *opt2 = 7.989358247;
+        z = 79.82984520;
     }
-    if (kind_of_func == 4)
+    if (kind_of_func == 2)
     {
-        *left = -10;
-        *right = 10;
-        *opt1 = 1;
-        *opt2 = 1;
+        left[0] = 0;
+        right[0] = 3;
+        left[1] = -1;
+        right[1] = 6;
+        *opt1 = 2.16666;
+        *opt2 = 0.66666;
+        z = 11.16666667;
     }
-    if (kind_of_func == 5)
+    if (kind_of_func == 3)
     {
-        *left = -10;
-        *right = 10;
-        *opt1 = 0;
-        *opt2 = 0;
+        left[0] = 0;
+        right[0] = 3;
+        left[1] = -1;
+        right[1] = 6;
+        *opt1 = 2.16666;
+        *opt2 = 0.66666;
+        z = 11.16666667;
     }
-    if (kind_of_func == 6)
+    for (i = 0; i < number_x; i++)
     {
-        *left = -2.5;
-        *right = 2.5;
-        *opt1 = 0;
-        *opt2 = 0;
+        nparts = (right[i] - left[i])/e;
+        while (s < nparts + 1)
+        {
+            s *= 2;
+            temp_m++;
+        }
+        number_m[i] = temp_m;
+        h[i] = (right[i] - left[i])/(pow(2,temp_m)-1);
+        s = 1;
+        *m+=temp_m;
+        temp_m = 0;
     }
-    if (kind_of_func == 7)
-    {
-        *left = -5;
-        *right = 5;
-        *opt1 = 0;
-        *opt2 = 0;
-    }
-    if (kind_of_func == 8)
-    {
-        *left = -4;
-        *right = 4;
-        *opt1 = 0;
-        *opt2 = 0;
-    }
-    if (kind_of_func == 9)
-    {
-        *left = 0;
-        *right = 4;
-        *opt1 = 0;
-        *opt2 = 0;
-    }
-    if (kind_of_func == 10||kind_of_func == 11)
-    {
-        *left = 0;
-        *right = 4;
-        *opt1 = 1.99516;
-        *opt2 = 1.99516;
-    }
-    if (kind_of_func == 12)
-    {
-        *left = -65;
-        *right = 65;
-        *opt1 = -32;
-        *opt2 = -32;
-    }*/
-
-    nparts = (right1 - *left1)/e;
-    while (s < nparts + 1)
-    {
-        s *= 2;
-        (*m1)++;
-    }
-    *h1 = (right1 - *left1)/(pow(2,*m1)-1);
-    s = 1;
-    nparts = (right2 - *left2)/e;
-    while (s < nparts + 1)
-    {
-        s *= 2;
-        (*m2)++;
-    }
-    *h2 = (right2 - *left2)/(pow(2,*m2)-1);
-    *m = *m1 + *m2;
+    delete[] right;
 }
 
 
@@ -583,15 +751,25 @@ int main()
 	string sel_switch = "tour";// prop, rang, tour
 	int cross_switch = 3;//1, 2, 3
 	string mut_switch = "strong";//weak, average, strong
-	int kind_of_func = 0;
-	int n = 50, m = 0, m1 = 0, m2 = 0, i, j, in, k, fights = n*2, globali, i_launch, number_of_popul = 100, gener, counter;
-	float left1, left2, e = 0.001,  h1, h2, opt1, opt2, number = 0, number_of_launch = 100, reability,
-	min_diff1, min_diff2, x1min, x2min, powermin, sum_gener = 0, average_gener, C = 0.5, a = 2., b = 2.;
+	// 2 плохо
+	int kind_of_func = 2;
+	int kind_of_fine = 1; // 1-динамические, 2-адаптивные
+	int n = 50, m = 0, i, j, in, k, fights = n*2, globali, i_launch, number_of_popul = 100, gener, counter, without_fines = 0;
+	float e = 0.01,  h1, h2, opt1, opt2, number = 0, number_of_launch = 100, reability,min_diff1, min_diff2, x1min, x2min,
+	powermin, sum_gener = 0, average_gener, C = 0.5, a = 2., b = 2., b1 = 1.1, b2 = 1.2, kk = 5;
 	bool flag;
+	int number_x;
+	if (kind_of_func == 0||kind_of_func == 1||kind_of_func == 2||kind_of_func == 4||kind_of_func == 6)
+        number_x = 2;
+    if(kind_of_func == 3||kind_of_func == 5)
+        number_x = 3;
 
 
 
-    limits(&left1, &left2, &h1, &h2, kind_of_func, &opt1, &opt2, e, &m1, &m2, &m);
+    float *left = new float[number_x];
+    float *h = new float[number_x];
+    int *number_m = new int[number_x];
+    limits(left, h, kind_of_func, &opt1, &opt2, e, number_m, number_x, &m);
 
 
     int** A1 = new int* [n];
@@ -610,11 +788,13 @@ int main()
     int** children = new int* [fights];
     for (i = 0; i < fights; i++)
         children[i] = new int[m];
-    int *index = new int[n + fights];
-    float *x1 = new float[n*2];
-    float *x2 = new float[n*2];
-    float *x12 = new float[n];
-    float *x22 = new float[n];
+    int *index = new int[n*2];
+    float** x = new float* [n*2];
+    for (i = 0; i < n*2; i++)
+        x[i] = new float[number_x];
+    float** x2 = new float* [n];
+    for (i = 0; i < n; i++)
+        x2[i] = new float[number_x];
     float *f = new float[n*2];
     float *f2 = new float[n];
 
@@ -626,25 +806,27 @@ int main()
         for (j = 0; j < m; j++)
             A1[i][j] = rand() % 2;
 
-    count_x(A1, n, m, h1, h2, left1, left2, x1, x2, m1, m2, true);
-    func(x1, x2, f, n, kind_of_func, true);
-    fine(x1, x2, n, fines, b, kind_of_func, true);
+    count_x(A1, n, h, left, x, number_m, number_x, true);
+    func(x, f, n, kind_of_func, number_x, true);
+    fine(x, n, fines, b, kind_of_func, true);
     //цикл поколений
     for (globali = 1; globali < number_of_popul; globali++)
     {
-        fitness(power1, f, globali, fines, C, a, b, n, kind_of_func, true);
+        fitness(power1, f, globali, fines, C, a, b, n, kind_of_func, kind_of_fine, b1, b2, k, without_fines, true);
         cout << "Generation " << globali << endl;
         for(i = 0; i < n; i++)
         {
-            cout << x1[i] << " " << x2[i] << " " << f[i] << " " << fines[i] << " " << power1[i] << endl;
+            for (j = 0; j < number_x; j++)
+                cout << x[i][j] << "  ";
+            cout << f[i] << "  " << fines[i] << "  " << power1[i] << endl;
         }
         selection (sel_switch, power1, fights, n, parents, A1, m);
         cross(fights, m, cross_switch, children, parents);
         mutation(mut_switch, n, m, children);
-        count_x(children, n, m, h1, h2, left1, left2, x1, x2, m1, m2);
-        func(x1, x2, f, n, kind_of_func);
-        fine(x1, x2, n, fines, b, kind_of_func);
-        fitness(power1, f, globali, fines, C, a, b, n, kind_of_func);
+        count_x(children, n, h, left, x, number_m, number_x);
+        func(x, f, n, kind_of_func, number_x);
+        fine(x, n, fines, b, kind_of_func);
+        fitness(power1, f, globali, fines, C, a, b, n, kind_of_func, kind_of_fine, b1, b2, k, without_fines);
         for (i = 0; i < n*2; i++)
             index[i] = i;
         quicksort(power1, index, 0, fights - 1);
@@ -656,25 +838,21 @@ int main()
             {
                 for (j = 0; j < m; j++)
                     A2[i][j] = A1[in][j];
-                x12[i] = x1[in];
-                x22[i] = x2[in];
-                fines2[i] = fines[in];
-                f2[i] = f[in];
             }
             if (in >= n)
             {
                  for (j = 0; j < m; j++)
                     A2[i][j] = children [in-n][j];
-                x12[i] = x1[in];
-                x22[i] = x2[in];
-                fines2[i] = fines[in];
-                f2[i] = f[in];
             }
+            for (j = 0; j < number_x; j++)
+                x2[i][j] = x[in][j];
+            fines2[i] = fines[in];
+            f2[i] = f[in];
         }
        for (i = 0; i < n; i++)
        {
-           x1[i] = x12[i];
-           x2[i] = x22[i];
+           for (j = 0; j < number_x; j++)
+                x[i][j] = x2[i][j];
            fines[i] = fines2[i];
            f[i] = f2[i];
            for (j=0; j < m; j++)
@@ -682,7 +860,10 @@ int main()
                A1[i][j]=A2[i][j];
            }
        }
-
+        if (fines[0] == 0)
+            without_fines+=1;
+        else
+            without_fines = 0;
 
         /*min_diff1 = abs(x1[0]-opt1);
         min_diff2 = abs(x2[0]-opt2);
@@ -715,8 +896,6 @@ int main()
     //cout << "В среднем решение находится на  " << average_gener << " поколении" << endl;
 
     //fout << endl;
-    delete[] x1;
-    delete[] x2;
     for (i = 0; i < n; i++)
         delete [] A2[i];
     delete[] A2;
@@ -732,13 +911,19 @@ int main()
     for (i = 0; i < n; i++)
         delete [] A1[i];
     delete[] A1;
-    delete[] x12;
-    delete[] x22;
     delete[] fines;
     delete[] fines2;
     delete[] f;
     delete[] f2;
+    delete[] left;
+    delete[] h;
+    delete[] number_m;
+    for (i = 0; i < n; i++)
+        delete [] x[i];
+    delete[] x;
+    for (i = 0; i < n; i++)
+        delete [] x2[i];
+    delete[] x2;
 
     //fout.close();
 }
-// разобраться почему получаются нули
