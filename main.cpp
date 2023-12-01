@@ -434,34 +434,6 @@ void func(double **x, double *f, int n, int kind_of_func, int number_x, bool par
     if (kind_of_func == 3)
         for (i = j; i < n; i++)
             f[i] = x[i][0]*x[i][0]*x[i][0]+x[i][1]*x[i][1]+x[i][2];
-    if (kind_of_func == 4)
-        for (i = j; i < n; i++)
-            f[i] = 2000*x[i][0]+2400*x[i][1];
-    if (kind_of_func == 5)
-    {
-        for (i = j; i < n; i++)
-        {
-            sum1 = 0;
-            sum2 = 0;
-            for (k = 0; k < number_x; k++)
-            {
-                sum1+=x[i][k]*x[i][k]/number_x;
-                sum2+=cos(2*pi*x[i][k]/number_x);
-            }
-            // e это эпсилант??
-            f[i] = 20-20*exp(-0.2*sum1)-exp(sum2);
-        }
-    }
-    if (kind_of_func == 6)
-    {
-        for (i = j; i < n; i++)
-        {
-            sum1 = 0;
-            for (k = 0; k < number_x; k++)
-                sum1+=0.1*x[i][k]*x[i][k]-4*cos(0.8*x[i][k])+4;
-            f[i] = sum1;
-        }
-    }
 }
 
 void fine(double **x, int n, double *fines, double b, int kind_of_func, bool parents = false)
@@ -563,103 +535,18 @@ void fine(double **x, int n, double *fines, double b, int kind_of_func, bool par
         }
 
     }
-    if(kind_of_func == 4)
-    {
-        for(i = k; i < n; i++)
-        {
-            temp_fines = 0;
-            for (j = 0; j < b; j++)
-                mult_fines*=max(double(0), -x[i][0]);
-            temp_fines+=mult_fines;
-            mult_fines = 1;
-            for (j = 0; j < b; j++)
-                mult_fines*=max(double(0), -x[i][1]);
-            temp_fines+=mult_fines;
-            mult_fines = 1;
-            for (j = 0; j < b; j++)
-                mult_fines*=max(double(0), x[i][0]/120+x[i][1]/110-1);
-            temp_fines+=mult_fines;
-            mult_fines = 1;
-            for (j = 0; j < b; j++)
-                mult_fines*=max(double(0), 4*x[i][0]+x[i][1]-320);
-            temp_fines+=mult_fines;
-            mult_fines = 1;
-            for (j = 0; j < b; j++)
-                mult_fines*=max(double(0), x[i][0]+x[i][1]-110);
-            temp_fines+=mult_fines;
-            mult_fines = 1;
-            for (j = 0; j < b; j++)
-                mult_fines*=max(double(0), x[i][0]/340+x[i][1]/120-1);
-            temp_fines+=mult_fines;
-            mult_fines = 1;
-            for (j = 0; j < b; j++)
-                mult_fines*=max(double(0), x[i][0]+2*x[i][1]-160);
-            temp_fines+=mult_fines;
-            mult_fines = 1;
-            for (j = 0; j < b; j++)
-                mult_fines*=max(double(0), x[i][0]+4*x[i][1]-280);
-            temp_fines+=mult_fines;
-            fines[i] = temp_fines;
-        }
-
-    }
-    if(kind_of_func == 5)
-    {
-        for(i = k; i < n; i++)
-        {
-            temp_fines = 0;
-            for (j = 0; j < b; j++)
-                mult_fines*=max(double(0), 2*x[i][0]-3*x[i][1]+4*x[i][2]-10);
-            temp_fines+=mult_fines;
-            mult_fines = 1;
-            for (j = 0; j < b; j++)
-                mult_fines*=max(double(0), 4*x[i][1]-5*x[i][2]+x[i][3]-1);
-            temp_fines+=mult_fines;
-            mult_fines = 1;
-            for (j = 0; j < b; j++)
-                mult_fines*=max(0., 10*x[i][0]+7.5*x[i][2]-8.4*x[i][3]-3.5);
-            temp_fines+=mult_fines;
-            mult_fines = 1;
-            for (j = 0; j < b; j++)
-                mult_fines*=max(0., -3.1*x[i][0]+21.7*x[i][1]-36.4*x[i][3]-16.2);
-            temp_fines+=mult_fines;
-            fines[i] = temp_fines;
-        }
-
-    }
-    if(kind_of_func == 6)
-    {
-        for(i = k; i < n; i++)
-        {
-            temp_fines = 0;
-            for (j = 0; j < b; j++)
-                mult_fines*=max(double(0), x[i][0]*x[i][0]+9*x[i][1]*x[i][1]-36);
-            temp_fines+=mult_fines;
-            mult_fines = 1;
-            for (j = 0; j < b; j++)
-                mult_fines*=max(double(0), 9*x[i][0]*x[i][0]+x[i][1]*x[i][1]-36);
-            temp_fines+=mult_fines;
-            fines[i] = temp_fines;
-        }
-
-    }
 }
-//нужно сохранять значение лямбды предыдущее
-void fitness(double *power, double* f, int globali, double *fines, double C, double a, double b, int n, int kind_of_func,
-             int kind_of_fine, double b1, double b2, double k, int without_fines, bool parents = false)
+
+void fitness(double *power, double* f, int globali, double *fines, double C, double a, double b, int n, int kind_of_func,bool parents = false)
 {
     int i, delta;
     double pow, lambda = 1;
-    if(kind_of_fine == 1)
-        for (i = 0; i < a; i++)
-            lambda*=C*globali;
-    if(kind_of_fine == 2)
-    {
 
-    }
+    for (i = 0; i < a; i++)
+        lambda*=C*globali;
     if(kind_of_func == 0||kind_of_func == 1||kind_of_func == 2||kind_of_func == 3||kind_of_func == 4)
         delta = 1;
-    if(kind_of_func == 5||kind_of_func == 6||kind_of_func == 66)
+    if(kind_of_func == 5||kind_of_func == 6||kind_of_func == 66||kind_of_func == 15)
         delta = -1;
     if(parents)
     {
@@ -745,6 +632,7 @@ void limits(double*left, double *h, int kind_of_func, double* opt1, double* opt2
         *opt3 = 0;
         z = 125;
     }
+
     for (i = 0; i < number_x; i++)
     {
         nparts = (right[i] - left[i])/e;
@@ -857,6 +745,7 @@ void norm(double *power1, double* power2, double** x, double** x2, double* total
 }
 
 
+
 int main()
 {
     //ofstream fout("2.txt");
@@ -944,12 +833,12 @@ int main()
     //цикл поколений
     for (globali = 1; globali < number_of_popul; globali++)
     {
-        fitness(power1, totalC, globali, totalP, C, a, b, n, kind_of_func, kind_of_fine, b1, b2, k, without_fines, true);
+        fitness(power1, totalC, globali, totalP, C, a, b, n, kind_of_func, true);
         cout << "Generation " << globali << endl;
         for(i = 0; i < n; i++)
         {
-            for (j = 0; j < number_x; j++)
-                cout << x[i][j] << "  ";
+            //for (j = 0; j < number_x; j++)
+                //cout << x[i][j] << "  ";
             cout << totalC[i] << "  " << totalP[i] << "  " << power1[i] << endl;
         }
         selection (sel_switch, power1, fights, n, parents, A1, m);
@@ -964,7 +853,7 @@ int main()
         }
         //func(x, f, n, kind_of_func, number_x);
         //fine(x, n, fines, b, kind_of_func);
-        fitness(power2, totalC2, globali, totalP2, C, a, b, n, kind_of_func, kind_of_fine, b1, b2, k, without_fines, true);
+        fitness(power2, totalC2, globali, totalP2, C, a, b, n, kind_of_func, true);
         norm(power1, power2, x, x2, totalC, totalC2, totalP, totalP2, n, number_x);
         for (i = 0; i < n*2; i++)
             index[i] = i;
@@ -1003,11 +892,6 @@ int main()
                A1[i][j]=A2[i][j];
            }
        }
-        if (fines[0] == 0)
-            without_fines+=1;
-        else
-            without_fines = 0;
-
         /*min_diff1 = abs(x1[0]-opt1);
         min_diff2 = abs(x2[0]-opt2);
         for (i = 0; i < n; i++)
